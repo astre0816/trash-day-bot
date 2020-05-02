@@ -1,11 +1,15 @@
-var USER_ID = PropertiesService.getScriptProperties().getProperty("USER_ID");
-var ACCESS_TOKEN = PropertiesService.getScriptProperties().getProperty("ACCESS_TOKEN");
-var PUSH_URL = PropertiesService.getScriptProperties().getProperty("PUSH_URL");
-var REPLY_URL = PropertiesService.getScriptProperties().getProperty("REPLY_URL");
+const USER_ID = PropertiesService.getScriptProperties().getProperty("USER_ID");
+const ACCESS_TOKEN = PropertiesService.getScriptProperties().getProperty("ACCESS_TOKEN");
+const PUSH_URL = PropertiesService.getScriptProperties().getProperty("PUSH_URL");
+const REPLY_URL = PropertiesService.getScriptProperties().getProperty("REPLY_URL");
+const SPREADSHEET_KEY = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_KEY");
+const SPREADSHEET = SpreadsheetApp.openByKey(SPREADSHEET_KEY);
+const SHEET_TRASH_DAYS = SPREADSHEET.getSheetByName("TRASH_DAYS");
+const SHEET_SPECIAL_DAYS = SPREADSHEET.getSheetByName("SPECIAL_DAYS");
 
 function doPost(e) {
     console.log(e);
-    var json = JSON.parse(e.postData.contents);
+    let json = JSON.parse(e.postData.contents);
     reply(json);
 }
 
@@ -15,18 +19,18 @@ function doGet(e) {
 }
 
 function push() {
-    var pushText = createPushMessage();
+    let pushText = createMessage("明日", false);
 
     if (pushText == "") {
         return;
     }
 
-    var headers = {
+    let headers = {
         "Content-Type": "application/json; charset=UTF-8",
         "Authorization": "Bearer " + ACCESS_TOKEN
     };
 
-    var postData = {
+    let postData = {
         "to": USER_ID,
         "messages": [
             {
@@ -37,7 +41,7 @@ function push() {
         ]
     };
 
-    var options = {
+    let options = {
         "method": "POST",
         "headers": headers,
         "payload": JSON.stringify(postData)
@@ -47,16 +51,16 @@ function push() {
 }
 
 function reply(data) {
-    var postMsg = data.events[0].message.text;
-    var replyToken = data.events[0].replyToken;
+    let postMsg = data.events[0].message.text;
+    let replyToken = data.events[0].replyToken;
 
-    var replyText = createReplyMessage(postMsg);
+    let replyText = createMessage(postMsg, true);
 
     if (replyText == "") {
         return;
     }
 
-    var postData = {
+    let postData = {
         "replyToken": replyToken,
         "messages": [
             {
@@ -67,12 +71,12 @@ function reply(data) {
         ]
     };
 
-    var headers  = {
+    let headers  = {
         "Content-Type": "application/json; charset=UTF-8",
         "Authorization": "Bearer " + ACCESS_TOKEN
     };
 
-    var options = {
+    let options = {
         "method": "POST",
         "headers": headers,
         "payload": JSON.stringify(postData)
